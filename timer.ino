@@ -15,6 +15,7 @@ const int piezo = 7;
 int ptm;
 int theta;
 int blueLevel;
+int pitch;
 
 int setTime = 0;
 int timeLeft = 0;
@@ -47,7 +48,7 @@ void loop() {
   int currentButtonState = digitalRead(buttonPin);
 
   if (digitalRead(buttonPin) == LOW){
-    delay(500);
+    delay(250);
 
     if (!isCounting && setTime > 0){
       isCounting = true;
@@ -68,15 +69,17 @@ void loop() {
     }
   }
 
-lastButtonState = currentButtonState;
+  lastButtonState = currentButtonState;
 
   if (!isCounting){
 
     int currentPtm = analogRead(ptm_pos);
-    if (abs(currentPtm-lastPtm) > 4){
+    if (abs(currentPtm-lastPtm) > 4 || lastSetTime == -1){
       lastPtm = currentPtm;
       blueLevel = map(currentPtm, 0, 1023, 156, 3);
-      setTime = map(currentPtm,0, 1023, 60, 1);
+      setTime = map(currentPtm, 0, 1023, 60, 1);
+      pitch = map(currentPtm, 0, 1023, 1000, 300);
+
       setColor(0, 0, blueLevel);
 
       if (setTime != lastSetTime){
@@ -89,7 +92,9 @@ lastButtonState = currentButtonState;
         lcd.print(setTime);
         lcd.print(" min ");
 
-        tone(piezo, 400, 10);
+        if (lastSetTime != -1){
+          tone(piezo, pitch, 10);
+        }
 
         lastSetTime = setTime;
       }
