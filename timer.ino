@@ -6,9 +6,15 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 const int ptm_pos = A0;
 const int buttonPin = 8;
 
+const int redPin = 13;
+const int greenPin = 9;
+const int bluePin = 6;
+const int piezo = 7;
+
 
 int ptm;
 int theta;
+int blueLevel;
 
 int setTime = 0;
 int timeLeft = 0;
@@ -17,6 +23,7 @@ bool isCounting = false;
 unsigned long previousMillis = 0;
 const long interval = 1000;
 
+int lastPtm = -100;
 int lastSetTime = -1;       
 int lastButtonState = HIGH; 
 
@@ -27,6 +34,11 @@ void setup() {
   lcd.setCursor(0,0);
 
   pinMode(buttonPin, INPUT_PULLUP);
+
+  pinMode(redPin, OUTPUT);
+  pinMode(greenPin, OUTPUT);
+  pinMode(bluePin, OUTPUT);
+  pinMode(piezo, OUTPUT);
 //  lcd.print("test");
 }
 
@@ -43,6 +55,10 @@ void loop() {
 
       previousMillis = millis();
 
+      setColor(0, 30, 0);
+
+      tone(piezo, 1200, 100);
+
       lcd.clear();
     }
       else if (isCounting){
@@ -55,20 +71,28 @@ void loop() {
 lastButtonState = currentButtonState;
 
   if (!isCounting){
-    ptm = analogRead(ptm_pos);
-    setTime = map(ptm,0,1023,60,1);
 
-    if (setTime != lastSetTime){
-      lcd.setCursor(0,0);
-      lcd.print("Set Timer:");
+    int currentPtm = analogRead(ptm_pos);
+    if (abs(currentPtm-lastPtm) > 4){
+      lastPtm = currentPtm;
+      blueLevel = map(currentPtm, 0, 1023, 156, 3);
+      setTime = map(currentPtm,0, 1023, 60, 1);
+      setColor(0, 0, blueLevel);
 
-      if (setTime < 10){
+      if (setTime != lastSetTime){
+        lcd.setCursor(0,0);
+        lcd.print("Set Timer:");
+
+        if (setTime < 10){
         lcd.print("0");
-      }
-      lcd.print(setTime);
-      lcd.print(" min ");
+        }
+        lcd.print(setTime);
+        lcd.print(" min ");
 
-      lastSetTime = setTime;
+        tone(piezo, 400, 10);
+
+        lastSetTime = setTime;
+      }
     }
   }
 
@@ -95,7 +119,18 @@ lastButtonState = currentButtonState;
         lcd.clear();
         lcd.setCursor(0,0);
         lcd.print("Time Completed");
-        delay(2000);
+        setColor(255, 0, 0);
+
+
+        tone(piezo, 600, 400); // Low tone
+        delay(500);
+        tone(piezo, 800, 400); // High tone
+        delay(500);
+        tone(piezo, 600, 400); // Low tone
+        delay(500);
+        tone(piezo, 800, 400); // High tone
+        delay(500);
+
         lcd.clear();
         lastSetTime = -1;
       }
@@ -103,3 +138,8 @@ lastButtonState = currentButtonState;
   }
 }
 
+void setColor(int redValue, int blueValue, int greenValue){
+  analogWrite(redPin, redValue);
+  analogWrite(bluePin, blueValue);
+  analogWrite(greenPin, greenValue);
+}
