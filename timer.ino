@@ -39,7 +39,7 @@ void loop() {
 
     if (!isCounting && setTime > 0){
       isCounting = true;
-      timeLeft = setTime;
+      timeLeft = setTime*60;
 
       previousMillis = millis();
 
@@ -56,13 +56,17 @@ lastButtonState = currentButtonState;
 
   if (!isCounting){
     ptm = analogRead(ptm_pos);
-    setTime = map(ptm,0,1023,100,1);
+    setTime = map(ptm,0,1023,60,1);
 
     if (setTime != lastSetTime){
       lcd.setCursor(0,0);
-      lcd.print("Set Timer: ");
+      lcd.print("Set Timer:");
+
+      if (setTime < 10){
+        lcd.print("0");
+      }
       lcd.print(setTime);
-      lcd.print(" ");
+      lcd.print(" min ");
 
       lastSetTime = setTime;
     }
@@ -74,10 +78,16 @@ lastButtonState = currentButtonState;
       previousMillis = currentMillis;
       timeLeft--;
 
+      int displayMins = timeLeft / 60;
+      int displaySecs = timeLeft % 60;
 
       lcd.setCursor(0,0);
       lcd.print("Time Left: ");
-      lcd.print(timeLeft);
+      if (displayMins < 10) lcd.print("0");
+      lcd.print(displayMins);
+      lcd.print(":");
+      if (displaySecs < 10) lcd.print("0");
+      lcd.print(displaySecs);
       lcd.print(" ");
 
       if (timeLeft <= 0){
